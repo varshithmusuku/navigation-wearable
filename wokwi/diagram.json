@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "author": "Varshith Reddy Musuku",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-hc-sr04", "id": "sensor_front", "top": -161.7, "left": -263.3, "attrs": {} },
+    { "type": "wokwi-hc-sr04", "id": "sensor_left", "top": 40, "left": -320, "attrs": {} },
+    { "type": "wokwi-hc-sr04", "id": "sensor_right", "top": 240, "left": -260, "attrs": {} },
+    {
+      "type": "wokwi-led",
+      "id": "motor_front",
+      "top": -160,
+      "left": 260,
+      "attrs": { "color": "red", "label": "FRONT" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "motor_left",
+      "top": 40,
+      "left": 320,
+      "attrs": { "color": "yellow", "label": "LEFT" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "motor_right",
+      "top": 240,
+      "left": 260,
+      "attrs": { "color": "green", "label": "RIGHT" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_front",
+      "top": -140,
+      "left": 220,
+      "rotate": 90,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_left",
+      "top": 60,
+      "left": 280,
+      "rotate": 90,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_right",
+      "top": 260,
+      "left": 220,
+      "rotate": 90,
+      "attrs": { "value": "220" }
+    },
+    { "type": "wokwi-buzzer", "id": "buzzer1", "top": 340, "left": 40, "attrs": {} },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn1",
+      "top": 340,
+      "left": -80,
+      "attrs": { "color": "blue" }
+    }
+  ],
+  "connections": [
+    [ "esp:5V", "sensor_front:VCC", "red", [ "h0" ] ],
+    [ "esp:GND.1", "sensor_front:GND", "black", [ "h0" ] ],
+    [ "esp:D5", "sensor_front:TRIG", "green", [ "h0" ] ],
+    [ "esp:D18", "sensor_front:ECHO", "blue", [ "h0" ] ],
+    [ "esp:5V", "sensor_left:VCC", "red", [ "h0" ] ],
+    [ "esp:GND.1", "sensor_left:GND", "black", [ "h0" ] ],
+    [ "esp:D19", "sensor_left:TRIG", "green", [ "h0" ] ],
+    [ "esp:D21", "sensor_left:ECHO", "blue", [ "h0" ] ],
+    [ "esp:5V", "sensor_right:VCC", "red", [ "h0" ] ],
+    [ "esp:GND.1", "sensor_right:GND", "black", [ "h0" ] ],
+    [ "esp:D22", "sensor_right:TRIG", "green", [ "h0" ] ],
+    [ "esp:D23", "sensor_right:ECHO", "blue", [ "h0" ] ],
+    [ "esp:D25", "r_front:1", "orange", [ "h0" ] ],
+    [ "r_front:2", "motor_front:A", "orange", [ "h0" ] ],
+    [ "motor_front:C", "esp:GND.2", "black", [ "h0" ] ],
+    [ "esp:D26", "r_left:1", "orange", [ "h0" ] ],
+    [ "r_left:2", "motor_left:A", "orange", [ "h0" ] ],
+    [ "motor_left:C", "esp:GND.2", "black", [ "h0" ] ],
+    [ "esp:D27", "r_right:1", "orange", [ "h0" ] ],
+    [ "r_right:2", "motor_right:A", "orange", [ "h0" ] ],
+    [ "motor_right:C", "esp:GND.2", "black", [ "h0" ] ],
+    [ "esp:D32", "buzzer1:1", "purple", [ "h0" ] ],
+    [ "buzzer1:2", "esp:GND.2", "black", [ "h0" ] ],
+    [ "esp:D33", "btn1:1.l", "gray", [ "h0" ] ],
+    [ "btn1:2.l", "esp:GND.2", "black", [ "h0" ] ]
+  ],
+  "dependencies": {}
+}

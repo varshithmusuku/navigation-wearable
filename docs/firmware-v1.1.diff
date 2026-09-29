@@ -1,0 +1,115 @@
+--- firmware/original_tested/original_tested.ino	2026-09-29 01:04:44.813588124 +0000
++++ firmware/navigation_wearable/navigation_wearable.ino	2026-09-29 01:04:44.847775226 +0000
+@@ -23,9 +23,20 @@
+   This sketch is fully offline: no WiFi/BLE dependency required for
+   core obstacle-avoidance functionality, matching the "low-cost,
+   offline" design goal.
++
++  v1.1 changes vs original_tested.ino (everything else is unchanged):
++    1. Mode button: one mode change per press (was: repeated while held)
++    2. UFFL: a "close event" is counted once when an obstacle ENTERS the
++       danger zone (was: counted on every loop iteration, per sensor,
++       which pinned adaptiveGain at 0.75 while any obstacle stayed close)
++    3. Optional CSV logging (LOG_CSV) for scripts/plot_uffl.py
++  In the Wokwi simulation the three LEDs stand in for the vibration motors.
+   =====================================================================
+ */
+ 
++// Set to 1 to print CSV (ms,mode,front,left,right,close_event,gain) instead of text.
++#define LOG_CSV 0
++
+ // ---------------------- Pin Configuration ---------------------------
+ const int TRIG_FRONT = 5,  ECHO_FRONT = 18;
+ const int TRIG_LEFT  = 19, ECHO_LEFT  = 21;
+@@ -62,7 +73,11 @@
+ // Debounce state for mode button
+ int lastButtonState = HIGH;
+ unsigned long lastDebounceTime = 0;
+-const unsigned long debounceDelay = 250;
++const unsigned long debounceDelay = 50;
++int stableButtonState = HIGH;
++
++// Close-event edge detection for UFFL
++bool wasClose = false;
+ 
+ void setup() {
+   Serial.begin(115200);
+@@ -78,7 +93,11 @@
+   pinMode(BUZZER_PIN, OUTPUT);
+   pinMode(MODE_BUTTON, INPUT_PULLUP);
+ 
++#if LOG_CSV
++  Serial.println("ms,mode,front,left,right,close_event,gain");
++#else
+   Serial.println("Navigation Wearable Initialized - Mode: INDOOR");
++#endif
+ }
+ 
+ // ---------------------- Sensor Helpers ---------------------------
+@@ -131,7 +150,6 @@
+   }
+ 
+   if (distance <= profile.dangerCm) {
+-    recordCloseEvent();
+     analogWrite(motorPin, constrain((int)(255 * adaptiveGain), 0, 255));
+   } else {
+     // Linear ramp between caution and danger distance
+@@ -142,16 +160,22 @@
+   }
+ }
+ 
++const char* modeName() {
++  return currentMode == INDOOR ? "INDOOR" : currentMode == OUTDOOR ? "OUTDOOR" : "CROWDED";
++}
++
+ void handleModeButton() {
+   int reading = digitalRead(MODE_BUTTON);
+   if (reading != lastButtonState) lastDebounceTime = millis();
+ 
+-  if ((millis() - lastDebounceTime) > debounceDelay && reading == LOW) {
+-    currentMode = (FeedbackMode)((currentMode + 1) % 3);
+-    Serial.print("Mode switched to: ");
+-    Serial.println(currentMode == INDOOR ? "INDOOR" :
+-                    currentMode == OUTDOOR ? "OUTDOOR" : "CROWDED");
+-    lastDebounceTime = millis();
++  // Act only when the debounced state CHANGES to pressed -> one switch per press
++  if ((millis() - lastDebounceTime) > debounceDelay && reading != stableButtonState) {
++    stableButtonState = reading;
++    if (stableButtonState == LOW) {
++      currentMode = (FeedbackMode)((currentMode + 1) % 3);
++      Serial.print("Mode switched to: ");
++      Serial.println(modeName());
++    }
+   }
+   lastButtonState = reading;
+ }
+@@ -164,6 +188,13 @@
+   long dLeft  = readDistanceCm(TRIG_LEFT,  ECHO_LEFT);
+   long dRight = readDistanceCm(TRIG_RIGHT, ECHO_RIGHT);
+ 
++  // UFFL: one close event each time any sensor enters the danger zone
++  bool closeNow = (dFront >= 0 && dFront <= profile.dangerCm) ||
++                  (dLeft  >= 0 && dLeft  <= profile.dangerCm) ||
++                  (dRight >= 0 && dRight <= profile.dangerCm);
++  if (closeNow && !wasClose) recordCloseEvent();
++  wasClose = closeNow;
++
+   driveFeedback(MOTOR_FRONT, dFront, profile);
+   driveFeedback(MOTOR_LEFT,  dLeft,  profile);
+   driveFeedback(MOTOR_RIGHT, dRight, profile);
+@@ -175,5 +206,15 @@
+     tone(BUZZER_PIN, 2000, 100);
+   }
+ 
++#if LOG_CSV
++  Serial.print(millis());  Serial.print(",");
++  Serial.print(modeName()); Serial.print(",");
++  Serial.print(dFront);    Serial.print(",");
++  Serial.print(dLeft);     Serial.print(",");
++  Serial.print(dRight);    Serial.print(",");
++  Serial.print(closeNow ? 1 : 0); Serial.print(",");
++  Serial.println(adaptiveGain);
++#endif
++
+   delay(60); // ~16Hz sensing loop, quick enough for walking pace
+ }
