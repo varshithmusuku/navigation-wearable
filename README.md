@@ -64,7 +64,7 @@ logs/ media/ docs/
 - No user trials have been performed
 
 ## Author
-Varshith Reddy Musuku, Hyderabad, India. UFFL was later extended in collaborative research at Woosong University.
+Varshith Reddy Musuku, Hyderabad, India. UFFL was later extended in collaborative research.
 
 ## License
 MIT. See [LICENSE](LICENSE).
